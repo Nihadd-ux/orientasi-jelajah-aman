@@ -11,3 +11,10 @@ kota: string;
 suhu: number;
 tingkatAQI: TingkatAQI;
 }
+
+export interface LaporanUdara {
+  kota: string;               // wajib
+  indeksAQI: number;          // wajib
+  tingkat: TingkatAQI;        // wajib — union type (reuse dari TingkatAQI)
+  diperbaruiPada?: string;     // opsional
+}
