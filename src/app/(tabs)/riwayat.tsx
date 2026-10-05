@@ -1,5 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import RiwayatList from "../../../components/RiwayatList";
+import RiwayatList from "../../components/RiwayatList";
 
 export default function TabRiwayat() {
   const daftarKota = ["Pekalongan", "Jakarta", "Semarang"];

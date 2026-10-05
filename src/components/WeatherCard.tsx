@@ -1,6 +1,6 @@
 import { View, Text } from "react-native";
 import { WeatherCardProps } from "../types/cuaca";
-import { typeScale, spacing } from "../src/constants/styles";
+import { typeScale, spacing } from "../constants/styles";
 
 export default function WeatherCard({
   kota,
