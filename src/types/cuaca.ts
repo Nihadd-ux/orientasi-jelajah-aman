@@ -18,3 +18,10 @@ export interface LaporanUdara {
   tingkat: TingkatAQI;        // wajib — union type (reuse dari TingkatAQI)
   diperbaruiPada?: string;     // opsional
 }
+
+export interface WeatherCardProps {
+ kota: string;
+ suhu: number;
+ tingkatAQI: TingkatAQI;
+ indeksAQI?: number; // baru: angka asli dari API, opsional
+}
