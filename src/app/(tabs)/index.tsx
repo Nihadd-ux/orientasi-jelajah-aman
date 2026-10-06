@@ -1,4 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+//src/app/%28tabs%29/index.tsx
+import { router, useFocusEffect } from "expo-router";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -18,6 +20,11 @@ import { konversiTingkatAQI } from "../../services/weatherAdapter";
 import { labelKodeCuaca } from "../../constants/weatherCodes";
 import { HasilGeocoding } from "../../types/geocoding";
 import { DataCuacaLengkap, DataKualitasUdara } from "../../types/weather";
+import {
+  mintaIzinLokasi,
+  ambilKoordinatSaatIni,
+} from "../../services/locationService";
+import { ambilSemuaFavorit } from "../../../services/favoritStorage";
 
 export default function HalamanUtama() {
   const [teksCari, setTeksCari] = useState("");
@@ -33,6 +40,20 @@ export default function HalamanUtama() {
   const teksTertunda = useDebounce(teksCari, 500);
   const requestIdRef = useRef(0);
 
+  const [pesanLokasi, setPesanLokasi] = useState<string | null>(null);
+
+  // State untuk menyimpan daftar ID favorit
+  const [daftarIdFavorit, setDaftarIdFavorit] = useState<number[]>([]);
+
+  // Memperbarui daftar ID favorit setiap kali layar Beranda difokuskan
+  useFocusEffect(
+    useCallback(() => {
+      ambilSemuaFavorit().then((favorit) => {
+        setDaftarIdFavorit(favorit.map((f) => f.id));
+      });
+    }, []),
+  );
+
   useEffect(() => {
     if (teksTertunda.trim().length === 0) {
       setHasilPencarian([]);
@@ -45,6 +66,7 @@ export default function HalamanUtama() {
 
   async function pilihKota(kota: HasilGeocoding) {
     setKotaTerpilih(kota);
+    setHasilPencarian([]); // Menyembunyikan daftar pencarian setelah kota dipilih
     const idSaatIni = ++requestIdRef.current;
     setSedangMemuat(true);
     setPesanError(null);
@@ -65,9 +87,41 @@ export default function HalamanUtama() {
     }
   }
 
+  async function gunakanLokasiSaatIni() {
+    const status = await mintaIzinLokasi();
+    if (status === "denied") {
+      setPesanLokasi(
+        "Izin lokasi ditolak. Silakan cari kota secara manual di atas.",
+      );
+      return;
+    }
+    if (status === "unavailable") {
+      setPesanLokasi(
+        "Layanan lokasi tidak aktif di perangkat ini. Silakan cari kota secara manual.",
+      );
+      return;
+    }
+    setPesanLokasi(null);
+    const koordinat = await ambilKoordinatSaatIni();
+    pilihKota({
+      id: -1,
+      name: "Lokasi Saat Ini",
+      latitude: koordinat.latitude,
+      longitude: koordinat.longitude,
+      country: "",
+    });
+  }
+
+  // Cek apakah kota terpilih sudah ada di dalam daftar favorit
+  const isFavorit = kotaTerpilih
+    ? daftarIdFavorit.includes(kotaTerpilih.id)
+    : false;
+
   return (
     <SafeAreaView style={{ flex: 1, padding: 16, gap: 16 }}>
       <SearchBox onCari={setTeksCari} />
+      <Button title="Gunakan Lokasi Saat Ini" onPress={gunakanLokasiSaatIni} />
+      {pesanLokasi && <Text>{pesanLokasi}</Text>}
 
       {hasilPencarian.map((kota) => (
         <TouchableOpacity key={kota.id} onPress={() => pilihKota(kota)}>
@@ -95,6 +149,28 @@ export default function HalamanUtama() {
             tingkatAQI={konversiTingkatAQI(kualitasUdara.indeksAQI)}
             indeksAQI={kualitasUdara.indeksAQI}
           />
+
+          {/* Nonaktifkan tombol jika sudah favorit */}
+          <Button
+            title={isFavorit ? "Sudah di Favorit" : "Tambahkan ke Favorit"}
+            disabled={isFavorit}
+            onPress={() =>
+              router.push({
+                pathname: "/tambah-favorit",
+                params: {
+                  id: String(kotaTerpilih.id),
+                  nama: kotaTerpilih.name,
+                  lat: String(kotaTerpilih.latitude),
+                  lon: String(kotaTerpilih.longitude),
+                },
+              })
+            }
+          />
+
+          <Text style={{ fontSize: 13, color: "#444", marginTop: -4 }}>
+            Indeks AQI: {kualitasUdara.indeksAQI} (
+            {konversiTingkatAQI(kualitasUdara.indeksAQI)})
+          </Text>
 
           <Text style={{ fontSize: 13, color: "#444", marginTop: -8 }}>
             Suhu Hari Ini: Maks {cuaca.harian.suhuMaksimal[0]}°C / Min{" "}
