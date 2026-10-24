@@ -1,14 +1,10 @@
 /**
- * Learn more about light and dark modes:
- * https://docs.expo.dev/guides/color-schemes/
+ * Hook warna aktif. Sekarang membaca tema dari PenyediaTema sehingga
+ * pilihan Terang / Gelap / Ikuti Sistem langsung berlaku di seluruh layar.
  */
 
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTema } from '@/contexts/tema-context';
 
 export function useTheme() {
-  const scheme = useColorScheme();
-  const theme = scheme === 'unspecified' ? 'light' : scheme;
-
-  return Colors[theme];
+  return useTema().colors;
 }

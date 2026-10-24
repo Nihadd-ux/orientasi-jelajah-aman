@@ -1,6 +1,7 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Palet warna aplikasi Jelajah Aman.
+ * Setiap warna punya pasangan pada mode terang dan gelap sehingga seluruh
+ * layar dapat berubah tema secara dinamis.
  */
 
 import '@/global.css';
@@ -9,22 +10,60 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: '#0F172A',
+    textSecondary: '#475569',
+    textMuted: '#64748B',
+    background: '#F4F7FB',
+    backgroundElement: '#FFFFFF',
+    backgroundSelected: '#E2E8F0',
+    card: '#FFFFFF',
+    border: '#DCE5EF',
+    primary: '#1D6FE0',
+    primarySoft: '#E6F1FE',
+    primaryStrong: '#1554B0',
+    accent: '#F59E0B',
+    danger: '#DC2626',
+    dangerSoft: '#FEE2E2',
+    success: '#0F766E',
+    successSoft: '#D1FAE5',
+    warning: '#B45309',
+    warningSoft: '#FEF3C7',
+    inputBackground: '#FFFFFF',
+    tabBar: '#FFFFFF',
+    placeholder: '#94A3B8',
+    overlay: 'rgba(15, 23, 42, 0.45)',
+    shadow: '#0F172A',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: '#F8FAFC',
+    textSecondary: '#CBD5E1',
+    textMuted: '#94A3B8',
+    background: '#0B1220',
+    backgroundElement: '#121C2E',
+    backgroundSelected: '#1E293B',
+    card: '#121C2E',
+    border: '#243449',
+    primary: '#5EB8FF',
+    primarySoft: '#12293F',
+    primaryStrong: '#8CCBFF',
+    accent: '#FBBF24',
+    danger: '#F87171',
+    dangerSoft: '#3B1518',
+    success: '#34D399',
+    successSoft: '#0C2B25',
+    warning: '#FBBF24',
+    warningSoft: '#3A2A0A',
+    inputBackground: '#0F1A2B',
+    tabBar: '#0F1A2B',
+    placeholder: '#64748B',
+    overlay: 'rgba(0, 0, 0, 0.6)',
+    shadow: '#000000',
   },
-} as const;
+};
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+export type PaletteWarna = typeof Colors.light;
+export type SkemaWarna = keyof typeof Colors;
 
 export const Fonts = Platform.select({
   ios: {
@@ -59,7 +98,7 @@ export const Spacing = {
   four: 24,
   five: 32,
   six: 64,
-} as const;
+};
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;

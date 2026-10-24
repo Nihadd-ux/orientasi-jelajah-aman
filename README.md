@@ -1,5 +1,18 @@
 # Orientasi Jelajah Aman
 
+## Fitur UTS (Oktober 2026)
+
+Aplikasi ini telah disempurnakan untuk Ujian Tengah Semester dengan empat fitur wajib:
+
+1. **Ikon tab bar & label navigasi** — Beranda, Favorit & Riwayat, Pengaturan, dan Tentang memakai ikon unik dari `@expo/vector-icons` (Ionicons).
+2. **Riwayat pencarian terakhir** — maksimal 10 pencarian disimpan di AsyncStorage, tanpa duplikat, dan dapat diklik untuk otomatis mencari ulang kota.
+3. **Penghapusan cache kota** — setiap kota pada daftar cache memiliki tombol hapus dengan konfirmasi `Alert` (mobile) atau `window.confirm` (web).
+4. **Tema Terang / Gelap / Ikuti Sistem** — pilihan tema di menu Pengaturan diterapkan ke seluruh layar dan tersimpan setelah aplikasi ditutup.
+
+Laporan lengkap beserta screenshot tersedia di [`LAPORAN_UTS.md`](./LAPORAN_UTS.md). Folder bukti tangkapan layar berada di [`dokumentasi/`](./dokumentasi).
+
+**Repository GitHub:** https://github.com/Nihadd-ux/orientasi-jelajah-aman
+
 ## Dokumentasi Status Data & Offline-First (Praktikum Pertemuan 7)
 
 - **Cache-Segar**: Data lokal di SQLite yang disimpan kurang dari 30 menit lalu (masih dalam batas TTL), sehingga langsung ditampilkan tanpa memanggil jaringan internet.

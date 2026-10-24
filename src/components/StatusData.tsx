@@ -1,5 +1,8 @@
 // src/components/StatusData.tsx
-import { View, Text } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Text, View } from "react-native";
+
+import { useTheme } from "../hooks/use-theme";
 import { SumberData } from "../types/cache";
 
 interface StatusDataProps {
@@ -23,24 +26,40 @@ function labelSumber(sumber: SumberData): string {
 }
 
 export default function StatusData({ sumber, disimpanPada }: StatusDataProps) {
+  const colors = useTheme();
   const basi = sumber === "cache-basi";
   const label = labelSumber(sumber);
   const umur = formatUmur(disimpanPada);
+  const warnaTeks = basi ? colors.warning : colors.success;
 
   return (
     <View
       accessible
       accessibilityLabel={label + ", diperbarui " + umur}
       style={{
-        padding: 8,
-        borderRadius: 8,
-        backgroundColor: basi ? "#FEF3E2" : "#EAFBF6",
+        padding: 10,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: basi ? colors.warningSoft : colors.successSoft,
+        backgroundColor: basi ? colors.warningSoft : colors.successSoft,
+        flexDirection: "row",
+        alignItems: "flex-start",
+        gap: 8,
       }}
     >
-      <Text style={{ fontSize: 12, color: basi ? "#B45309" : "#13795F" }}>
-        {label}
-      </Text>
-      <Text style={{ fontSize: 11, color: "#666666" }}>Diperbarui {umur}</Text>
+      <Ionicons
+        name={basi ? "cloud-offline-outline" : "cloud-done-outline"}
+        size={18}
+        color={warnaTeks}
+      />
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 12, fontWeight: "600", color: warnaTeks }}>
+          {label}
+        </Text>
+        <Text style={{ fontSize: 11, color: colors.textSecondary }}>
+          Diperbarui {umur}
+        </Text>
+      </View>
     </View>
   );
 }
