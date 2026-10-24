@@ -1,6 +1,11 @@
-# Welcome to your Expo app 👋
+# Orientasi Jelajah Aman
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Dokumentasi Status Data & Offline-First (Praktikum Pertemuan 7)
+
+- **Cache-Segar**: Data lokal di SQLite yang disimpan kurang dari 30 menit lalu (masih dalam batas TTL), sehingga langsung ditampilkan tanpa memanggil jaringan internet.
+- **Cache-Basi**: Data lokal yang sudah berumur 30 menit atau lebih, namun tetap ditampilkan sebagai fallback saat jaringan internet gagal atau perangkat dalam mode offline.
+- **First-Run Offline**: Kondisi saat aplikasi dijalankan pertama kali (atau cache dikosongkan) tanpa koneksi internet sama sekali, sehingga tidak ada data tersimpan di SQLite dan aplikasi menampilkan pesan error informatif beserta tombol 'Coba Lagi'.
+- **Pentingnya Label Status Data**: Label status data memberikan transparansi yang jujur kepada pengguna, agar pengguna dapat membedakan secara jelas apakah informasi cuaca dan kualitas udara yang ditampilkan merupakan data real-time terkini dari internet atau salinan data lama yang mungkin sudah usang.
 
 ## Get started
 
