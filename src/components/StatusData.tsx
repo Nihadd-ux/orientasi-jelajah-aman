@@ -1,5 +1,4 @@
 // src/components/StatusData.tsx
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Text, View } from "react-native";
 
 import { useTheme } from "../hooks/use-theme";
@@ -30,36 +29,28 @@ export default function StatusData({ sumber, disimpanPada }: StatusDataProps) {
   const basi = sumber === "cache-basi";
   const label = labelSumber(sumber);
   const umur = formatUmur(disimpanPada);
-  const warnaTeks = basi ? colors.warning : colors.success;
 
   return (
     <View
       accessible
       accessibilityLabel={label + ", diperbarui " + umur}
       style={{
-        padding: 10,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: basi ? colors.warningSoft : colors.successSoft,
+        padding: 8,
+        borderRadius: 8,
         backgroundColor: basi ? colors.warningSoft : colors.successSoft,
-        flexDirection: "row",
-        alignItems: "flex-start",
-        gap: 8,
       }}
     >
-      <Ionicons
-        name={basi ? "cloud-offline-outline" : "cloud-done-outline"}
-        size={18}
-        color={warnaTeks}
-      />
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 12, fontWeight: "600", color: warnaTeks }}>
-          {label}
-        </Text>
-        <Text style={{ fontSize: 11, color: colors.textSecondary }}>
-          Diperbarui {umur}
-        </Text>
-      </View>
+      <Text
+        style={{
+          fontSize: 12,
+          color: basi ? colors.warning : colors.success,
+        }}
+      >
+        {label}
+      </Text>
+      <Text style={{ fontSize: 11, color: colors.textSecondary }}>
+        Diperbarui {umur}
+      </Text>
     </View>
   );
 }

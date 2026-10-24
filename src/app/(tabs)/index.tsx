@@ -1,5 +1,4 @@
 // src/app/(tabs)/index.tsx
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -21,7 +20,6 @@ import { useTheme } from "../../hooks/use-theme";
 import {
   bersihkanCacheLama,
   daftarKotaTersimpan,
-  hapusCache,
 } from "../../services/cacheRepository";
 import {
   ambilCuacaOfflineFirst,
@@ -36,12 +34,10 @@ import { simpanRiwayatPencarian } from "../../services/riwayatPencarian";
 import { konversiTingkatAQI } from "../../services/weatherAdapter";
 import { HasilCuacaOffline, RingkasanKotaTersimpan } from "../../types/cache";
 import { HasilGeocoding } from "../../types/geocoding";
-import { konfirmasiHapus } from "../../utils/konfirmasi";
 
 function formatTanggal(tanggal: string): string {
   try {
     return new Date(`${tanggal}T00:00:00`).toLocaleDateString("id-ID", {
-      weekday: "short",
       day: "numeric",
       month: "short",
     });
@@ -72,7 +68,7 @@ export default function HalamanUtama() {
   const [pesanLokasi, setPesanLokasi] = useState<string | null>(null);
 
   const teksTertunda = useDebounce(teksCari, 500);
-  const requestIdRef = useRef(0); // pencegah race condition
+  const requestIdRef = useRef(0);
   const parameterTerakhirRef = useRef<string | null>(null);
 
   const muatKotaTersimpan = useCallback(async () => {
@@ -83,14 +79,12 @@ export default function HalamanUtama() {
     }
   }, []);
 
-  // Saat aplikasi dibuka: buang cache > 7 hari, lalu tampilkan daftar tersimpan
   useEffect(() => {
     bersihkanCacheLama(BATAS_CACHE_MS)
       .then(muatKotaTersimpan)
       .catch(() => {});
   }, [muatKotaTersimpan]);
 
-  // Pencarian dengan debounce. Hasil basi dari ketikan sebelumnya diabaikan.
   useEffect(() => {
     const kataKunci = teksTertunda.trim();
     if (kataKunci.length === 0) {
@@ -126,11 +120,10 @@ export default function HalamanUtama() {
         },
         { paksaPerbarui },
       );
-      if (idSaatIni !== requestIdRef.current) return; // hasil basi, abaikan
+      if (idSaatIni !== requestIdRef.current) return;
       setHasil(data);
       muatKotaTersimpan();
 
-      // Catat pencarian ke riwayat (maksimal 10, tanpa duplikat).
       if (kota.name !== "Lokasi Saat Ini") {
         void simpanRiwayatPencarian({
           id: kota.id,
@@ -150,8 +143,7 @@ export default function HalamanUtama() {
     }
   }
 
-  // Membuka kota dari tab Favorit & Riwayat: isi kolom pencarian lalu tampilkan
-  // cuaca kota tersebut secara otomatis.
+  // Membuka kota dari tab Favorit & Riwayat.
   useEffect(() => {
     if (!params.cari) return;
     const kunciParameter = `${params.cari}|${params.ts ?? ""}`;
@@ -218,20 +210,13 @@ export default function HalamanUtama() {
     }
   }
 
-  function hapusCacheKota(kota: RingkasanKotaTersimpan) {
-    konfirmasiHapus({
-      judul: "Hapus cache kota?",
-      pesan: `Data cuaca ${kota.nama} yang tersimpan di perangkat akan dihapus. Kota ini tidak bisa dibuka offline sampai pencarian berikutnya.`,
-      onKonfirmasi: async () => {
-        await hapusCache(kota.kunci);
-        await muatKotaTersimpan();
-      },
-    });
-  }
-
-  const aqiTingkat = hasil
-    ? konversiTingkatAQI(hasil.kualitasUdara.indeksAQI)
-    : null;
+  const warnaTombol = {
+    backgroundColor: colors.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    alignItems: "center" as const,
+  };
 
   return (
     <SafeAreaView
@@ -239,20 +224,18 @@ export default function HalamanUtama() {
       style={{ flex: 1, backgroundColor: colors.background }}
     >
       <ScrollView
-        contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}
+        contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={{ gap: 4 }}>
-          <Text
-            style={{ fontSize: 24, fontWeight: "800", color: colors.text }}
-            accessibilityRole="header"
-          >
-            Jelajah Aman
-          </Text>
-          <Text style={{ fontSize: 13, color: colors.textSecondary }}>
-            Pantau cuaca dan kualitas udara sebelum beraktivitas.
-          </Text>
-        </View>
+        <Text
+          style={{ fontSize: 22, fontWeight: "bold", color: colors.text }}
+          accessibilityRole="header"
+        >
+          Jelajah Aman
+        </Text>
+        <Text style={{ fontSize: 13, color: colors.textSecondary }}>
+          Cari cuaca dan kualitas udara kota.
+        </Text>
 
         <SearchBox nilai={teksCari} onCari={setTeksCari} />
 
@@ -261,25 +244,13 @@ export default function HalamanUtama() {
           accessibilityRole="button"
           accessibilityLabel="Gunakan lokasi saat ini untuk melihat cuaca"
           style={{
-            flexDirection: "row",
+            backgroundColor: colors.backgroundSelected,
+            paddingVertical: 10,
+            borderRadius: 8,
             alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            backgroundColor: colors.primarySoft,
-            borderWidth: 1,
-            borderColor: colors.border,
-            paddingVertical: 12,
-            borderRadius: 14,
           }}
         >
-          <Ionicons name="navigate" size={18} color={colors.primary} />
-          <Text
-            style={{
-              color: colors.primary,
-              fontWeight: "700",
-              fontSize: 14,
-            }}
-          >
+          <Text style={{ color: colors.text, fontSize: 13 }}>
             Gunakan Lokasi Saat Ini
           </Text>
         </Pressable>
@@ -287,40 +258,15 @@ export default function HalamanUtama() {
         {pesanLokasi && (
           <Text
             accessibilityLabel={pesanLokasi}
-            style={{
-              fontSize: 12,
-              color: colors.warning,
-              backgroundColor: colors.warningSoft,
-              padding: 10,
-              borderRadius: 10,
-            }}
+            style={{ fontSize: 12, color: colors.warning }}
           >
             {pesanLokasi}
           </Text>
         )}
 
         {hasilPencarian.length > 0 && (
-          <View
-            style={{
-              backgroundColor: colors.card,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: colors.border,
-              overflow: "hidden",
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "700",
-                color: colors.textMuted,
-                paddingHorizontal: 14,
-                paddingTop: 12,
-                paddingBottom: 6,
-                textTransform: "uppercase",
-                letterSpacing: 0.5,
-              }}
-            >
+          <View style={{ gap: 2 }}>
+            <Text style={{ fontSize: 12, color: colors.textMuted }}>
               Hasil pencarian
             </Text>
             {hasilPencarian.map((kota, indeks) => (
@@ -330,190 +276,71 @@ export default function HalamanUtama() {
                 accessibilityRole="button"
                 accessibilityLabel={`Pilih kota ${kota.name}`}
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
-                  paddingHorizontal: 14,
-                  paddingVertical: 12,
-                  borderTopWidth: indeks === 0 ? 0 : 1,
-                  borderTopColor: colors.border,
+                  paddingVertical: 8,
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.border,
                 }}
               >
-                <Ionicons
-                  name="location-outline"
-                  size={18}
-                  color={colors.primary}
-                />
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      color: colors.text,
-                      fontWeight: "600",
-                      fontSize: 15,
-                    }}
-                  >
-                    {kota.name}
-                  </Text>
-                  <Text style={{ color: colors.textMuted, fontSize: 12 }}>
-                    {[kota.admin1, kota.country].filter(Boolean).join(", ")}
-                  </Text>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={18}
-                  color={colors.textMuted}
-                />
+                <Text style={{ color: colors.text, fontSize: 14 }}>
+                  {kota.name}
+                </Text>
+                <Text style={{ color: colors.textMuted, fontSize: 11 }}>
+                  {[kota.admin1, kota.country].filter(Boolean).join(", ")}
+                </Text>
               </Pressable>
             ))}
           </View>
         )}
 
         {kotaTersimpan.length > 0 && (
-          <View style={{ gap: 8 }}>
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-            >
-              <Ionicons
-                name="cloud-done-outline"
-                size={16}
-                color={colors.textSecondary}
-              />
-              <Text
+          <View style={{ gap: 2 }}>
+            <Text style={{ fontSize: 12, color: colors.textMuted }}>
+              Tersimpan di perangkat (bisa dibuka offline)
+            </Text>
+            {kotaTersimpan.map((k) => (
+              <Pressable
+                key={k.kunci}
+                onPress={() =>
+                  pilihKota({
+                    id: k.id,
+                    name: k.nama,
+                    latitude: k.latitude,
+                    longitude: k.longitude,
+                    country: "",
+                  })
+                }
+                accessibilityRole="button"
+                accessibilityLabel={`Buka cuaca tersimpan ${k.nama}`}
                 style={{
-                  fontWeight: "700",
-                  color: colors.textSecondary,
-                  fontSize: 13,
+                  paddingVertical: 8,
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.border,
                 }}
               >
-                Tersimpan di perangkat (bisa dibuka offline)
-              </Text>
-            </View>
-            <View style={{ gap: 8 }}>
-              {kotaTersimpan.map((k) => {
-                const kodeKota: HasilGeocoding = {
-                  id: k.id,
-                  name: k.nama,
-                  latitude: k.latitude,
-                  longitude: k.longitude,
-                  country: "",
-                };
-                return (
-                  <View
-                    key={k.kunci}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      backgroundColor: colors.card,
-                      borderRadius: 12,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      paddingLeft: 12,
-                    }}
-                  >
-                    <Pressable
-                      onPress={() => pilihKota(kodeKota)}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Buka cuaca tersimpan ${k.nama}`}
-                      style={{
-                        flex: 1,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 8,
-                        paddingVertical: 12,
-                      }}
-                    >
-                      <Ionicons
-                        name="save-outline"
-                        size={16}
-                        color={colors.primary}
-                      />
-                      <Text style={{ color: colors.text, fontSize: 14 }}>
-                        {k.nama}
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      onPress={() => hapusCacheKota(k)}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Hapus cache ${k.nama}`}
-                      hitSlop={6}
-                      style={{ padding: 12 }}
-                    >
-                      <Ionicons
-                        name="trash-outline"
-                        size={18}
-                        color={colors.danger}
-                      />
-                    </Pressable>
-                  </View>
-                );
-              })}
-            </View>
+                <Text style={{ color: colors.text, fontSize: 14 }}>
+                  {k.nama}
+                </Text>
+              </Pressable>
+            ))}
           </View>
         )}
 
-        {sedangMemuat && (
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 10,
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 12,
-              padding: 14,
-            }}
-          >
-            <ActivityIndicator color={colors.primary} />
-            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
-              Memuat data cuaca...
-            </Text>
-          </View>
-        )}
+        {sedangMemuat && <ActivityIndicator color={colors.primary} />}
 
         {pesanError && (
-          <View
-            style={{
-              backgroundColor: colors.dangerSoft,
-              borderWidth: 1,
-              borderColor: colors.danger,
-              borderRadius: 14,
-              padding: 14,
-              gap: 10,
-            }}
-          >
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+          <View style={{ gap: 8 }}>
+            <Text
+              accessibilityLabel={pesanError}
+              style={{ fontSize: 12, color: colors.danger }}
             >
-              <Ionicons
-                name="alert-circle"
-                size={20}
-                color={colors.danger}
-              />
-              <Text
-                accessibilityLabel={pesanError}
-                style={{
-                  flex: 1,
-                  color: colors.danger,
-                  fontWeight: "600",
-                  fontSize: 13,
-                }}
-              >
-                {pesanError}
-              </Text>
-            </View>
+              {pesanError}
+            </Text>
             <Pressable
               onPress={() => kotaTerpilih && pilihKota(kotaTerpilih, true)}
               accessibilityRole="button"
-              style={{
-                alignSelf: "flex-start",
-                backgroundColor: colors.danger,
-                paddingHorizontal: 14,
-                paddingVertical: 8,
-                borderRadius: 10,
-              }}
+              style={warnaTombol}
             >
-              <Text style={{ color: "#FFFFFF", fontWeight: "700" }}>
+              <Text style={{ color: "#FFFFFF", fontWeight: "bold" }}>
                 Coba Lagi
               </Text>
             </Pressable>
@@ -521,7 +348,7 @@ export default function HalamanUtama() {
         )}
 
         {hasil && kotaTerpilih && !sedangMemuat && (
-          <View style={{ gap: 12 }}>
+          <View style={{ gap: 10 }}>
             <StatusData
               sumber={hasil.sumber}
               disimpanPada={hasil.disimpanPada}
@@ -529,103 +356,21 @@ export default function HalamanUtama() {
             <WeatherCard
               kota={kotaTerpilih.name}
               suhu={hasil.cuaca.saatIni.suhu}
-              tingkatAQI={konversiTingkatAQI(
-                hasil.kualitasUdara.indeksAQI,
-              )}
+              tingkatAQI={konversiTingkatAQI(hasil.kualitasUdara.indeksAQI)}
               indeksAQI={hasil.kualitasUdara.indeksAQI}
             />
-
-            <View style={{ flexDirection: "row", gap: 10 }}>
-              <View
-                style={{
-                  flex: 1,
-                  backgroundColor: colors.card,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  borderRadius: 14,
-                  padding: 12,
-                  gap: 4,
-                }}
-              >
-                <Text style={{ fontSize: 11, color: colors.textMuted }}>
-                  KONDISI
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "700",
-                    color: colors.text,
-                  }}
-                >
-                  {labelKodeCuaca(hasil.cuaca.saatIni.kodeCuaca)}
-                </Text>
-              </View>
-              <View
-                style={{
-                  flex: 1,
-                  backgroundColor: colors.card,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  borderRadius: 14,
-                  padding: 12,
-                  gap: 4,
-                }}
-              >
-                <Text style={{ fontSize: 11, color: colors.textMuted }}>
-                  KECEPATAN ANGIN
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "700",
-                    color: colors.text,
-                  }}
-                >
-                  {hasil.cuaca.saatIni.kecepatanAngin} km/j
-                </Text>
-              </View>
-              <View
-                style={{
-                  flex: 1,
-                  backgroundColor: colors.card,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  borderRadius: 14,
-                  padding: 12,
-                  gap: 4,
-                }}
-              >
-                <Text style={{ fontSize: 11, color: colors.textMuted }}>
-                  KUALITAS UDARA
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "700",
-                    color: colors.text,
-                  }}
-                >
-                  {aqiTingkat}
-                </Text>
-              </View>
-            </View>
+            <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+              Kondisi: {labelKodeCuaca(hasil.cuaca.saatIni.kodeCuaca)} • Angin{" "}
+              {hasil.cuaca.saatIni.kecepatanAngin} km/j
+            </Text>
 
             {hasil.cuaca.harian.tanggal.length > 0 && (
-              <View
-                style={{
-                  backgroundColor: colors.card,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  borderRadius: 16,
-                  padding: 14,
-                  gap: 10,
-                }}
-              >
+              <View style={{ gap: 4 }}>
                 <Text
                   style={{
-                    fontWeight: "700",
+                    fontSize: 13,
+                    fontWeight: "bold",
                     color: colors.text,
-                    fontSize: 14,
                   }}
                 >
                   Prakiraan 3 Hari
@@ -635,23 +380,13 @@ export default function HalamanUtama() {
                     key={tanggal}
                     style={{
                       flexDirection: "row",
-                      alignItems: "center",
                       justifyContent: "space-between",
                     }}
                   >
-                    <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
                       {formatTanggal(tanggal)}
                     </Text>
-                    <Text style={{ color: colors.textMuted, fontSize: 12 }}>
-                      {labelKodeCuaca(hasil.cuaca.harian.kodeCuaca[i] ?? 0)}
-                    </Text>
-                    <Text
-                      style={{
-                        color: colors.text,
-                        fontWeight: "700",
-                        fontSize: 13,
-                      }}
-                    >
+                    <Text style={{ color: colors.text, fontSize: 12 }}>
                       {Math.round(hasil.cuaca.harian.suhuMaksimal[i] ?? 0)}° /{" "}
                       {Math.round(hasil.cuaca.harian.suhuMinimal[i] ?? 0)}°
                     </Text>
@@ -660,23 +395,13 @@ export default function HalamanUtama() {
               </View>
             )}
 
-            <View style={{ flexDirection: "row", gap: 10 }}>
+            <View style={{ flexDirection: "row", gap: 8 }}>
               <Pressable
                 onPress={() => pilihKota(kotaTerpilih, true)}
                 accessibilityRole="button"
-                style={{
-                  flex: 1,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 6,
-                  backgroundColor: colors.primary,
-                  borderRadius: 12,
-                  paddingVertical: 12,
-                }}
+                style={[warnaTombol, { flex: 1 }]}
               >
-                <Ionicons name="refresh" size={16} color="#FFFFFF" />
-                <Text style={{ color: "#FFFFFF", fontWeight: "700" }}>
+                <Text style={{ color: "#FFFFFF", fontWeight: "bold" }}>
                   Perbarui
                 </Text>
               </Pressable>
@@ -693,22 +418,18 @@ export default function HalamanUtama() {
                   })
                 }
                 accessibilityRole="button"
-                style={{
-                  flex: 1,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 6,
-                  backgroundColor: colors.card,
-                  borderWidth: 1,
-                  borderColor: colors.primary,
-                  borderRadius: 12,
-                  paddingVertical: 12,
-                }}
+                style={[
+                  warnaTombol,
+                  {
+                    flex: 1,
+                    backgroundColor: colors.backgroundElement,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  },
+                ]}
               >
-                <Ionicons name="heart" size={16} color={colors.primary} />
-                <Text style={{ color: colors.primary, fontWeight: "700" }}>
-                  Favorit
+                <Text style={{ color: colors.text, fontWeight: "bold" }}>
+                  Tambahkan ke Favorit
                 </Text>
               </Pressable>
             </View>
