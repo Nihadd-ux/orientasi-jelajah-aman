@@ -15,7 +15,7 @@ export async function ambilCuacaOfflineFirst(
   kota: KotaUntukCache,
   opsi: OpsiAmbil = {},
 ): Promise<HasilCuacaOffline> {
-  const cache = await ambilCache(kota.latitude, kota.longitude);
+  const cache = await ambilCache(kota.latitude, kota.longitude).catch(() => null);
   const umur = cache ? Date.now() - cache.disimpanPada : Infinity;
 
   // 1. Cache masih segar -> pakai langsung, tanpa memanggil internet
